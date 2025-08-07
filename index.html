@@ -157,7 +157,7 @@
             <span style="font-size: 0.5em; font-weight: 400; opacity: 0.8;">(but no hard skills)</span>
         </div>
         <h1 class="slide-text">So I ask stupid questions</h1>
-        <h1 class="slide-text">... and often get great answers</h1>
+        <h1 class="slide-text">... and get great answers</h1>
         <h1 class="slide-text">I've applied this to literally anything</h1>
         <div class="slide-text" id="links-slide" style="font-size: clamp(1rem, 2.5vw, 2rem); line-height: 1.6;">
              Like a <a href="https://zeliavibecodes.github.io/aura-project/" target="_blank" class="link-box">sensory simulator</a> for my daughter
@@ -175,7 +175,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     
     <script id="vertexShader" type="x-shader/x-vertex">
         // Uniforms passed from JavaScript
@@ -278,43 +277,9 @@
         let scene, camera, renderer, particles, uniforms;
         let currentState = 0;
         let isTransitioning = false;
-        const stateCount = 8; // Increased from 7 to 8
+        const stateCount = 8;
         let textElements = document.querySelectorAll('.slide-text');
         const mouse = new THREE.Vector2(10, 10); // Start offscreen
-        let audioInitialized = false;
-
-        // --- Audio Setup ---
-        let sounds;
-
-        function initAudio() {
-            const drone = new Tone.FatOscillator({
-                type: "sawtooth",
-                frequency: 40,
-                detune: 15,
-                volume: -28
-            }).toDestination().start();
-
-            const chime = new Tone.PluckSynth({
-                attackNoise: 0.5,
-                dampening: 8000,
-                resonance: 0.95,
-                volume: -6
-            }).toDestination();
-            
-            const crackle = new Tone.NoiseSynth({
-                noise: { type: 'pink' },
-                envelope: { attack: 0.001, decay: 0.05, sustain: 0 },
-                volume: -18
-            }).toDestination();
-
-            const hum = new Tone.Synth({
-                oscillator: { type: 'sine' },
-                envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1.0 },
-                volume: -12
-            }).toDestination();
-
-            sounds = { drone, chime, crackle, hum };
-        }
 
         // --- Scene Initialization ---
         function init() {
@@ -393,19 +358,19 @@
                 targetAttributes[4][i3+1] = y;
                 targetAttributes[4][i3+2] = (Math.random() - 0.5) * 0.5;
 
-                // --- State 5: Links (Gentle Cloud) --- NEW
+                // --- State 5: Links (Gentle Cloud) ---
                 targetAttributes[5][i3] = (Math.random() - 0.5) * 5;
                 targetAttributes[5][i3 + 1] = (Math.random() - 0.5) * 5;
                 targetAttributes[5][i3 + 2] = (Math.random() - 0.5) * 3;
 
-                // --- State 6: Rinse and Repeat (Vortex) --- SHIFTED
+                // --- State 6: Rinse and Repeat (Vortex) ---
                 const r = Math.random() * R * 1.2;
                 const angle = Math.random() * Math.PI * 10;
                 targetAttributes[6][i3] = r * Math.cos(angle);
                 targetAttributes[6][i3 + 1] = r * Math.sin(angle);
                 targetAttributes[6][i3 + 2] = (Math.random() - 0.5 - angle * 0.05) * 0.5;
 
-                // --- State 7: Build (Complex Structure) --- SHIFTED
+                // --- State 7: Build (Complex Structure) ---
                 const cubeSize = 0.5;
                 const sphereInCube = new THREE.Vector3().setFromSphericalCoords(R * 0.15, Math.acos(1 - 2 * Math.random()), Math.random() * Math.PI * 2);
                 const cubeOffset = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)).multiplyScalar(cubeSize * 2);
@@ -468,21 +433,11 @@
         }
         
         function changeState(newState) {
-            if (!audioInitialized) {
-                if (Tone.context.state !== 'running') {
-                    Tone.start();
-                }
-                initAudio();
-                audioInitialized = true;
-            }
-            
             if (isTransitioning && newState !== 0) return; // Allow restart anytime
             
             newState = Math.max(0, Math.min(stateCount - 1, newState));
             
-            // Allow restart from last slide
             if (newState === currentState && currentState !== stateCount -1) return;
-
 
             isTransitioning = true;
             const oldState = currentState;
@@ -516,14 +471,6 @@
                 uniforms.u_mouse_strength.value = 1.5;
             } else {
                 uniforms.u_mouse_strength.value = 0.3;
-            }
-
-            if (sounds) {
-                if (currentState === 3) sounds.chime.triggerAttackRelease("C5", "8n");
-                else if (currentState === 4) sounds.crackle.triggerAttackRelease("16n");
-                else if (currentState === 7) sounds.hum.triggerAttackRelease("C2", "2n");
-                else if (newState === 0) sounds.chime.triggerAttackRelease("A5", "8n");
-                else sounds.chime.triggerAttackRelease("C4", "16n", Tone.now(), 0.5);
             }
 
             let progress = { value: 0 };
